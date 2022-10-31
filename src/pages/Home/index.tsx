@@ -20,7 +20,7 @@ const newCycleFormValidationSchema = zod.object({
   task: zod.string().min(1, 'Informe a tarefa'),
   minutesAmount: zod
     .number()
-    .min(5, 'O ciclo precisa ser de no mínimo 5 minutos.')
+    .min(1, 'O ciclo precisa ser de no mínimo 5 minutos.')
     .max(60, 'O ciclo precisa ser de no máximo 60 minutos.'),
 })
 
@@ -38,6 +38,7 @@ interface Cycle {
   minutesAmount: number
   startDate: Date
   interruptedDate?: Date
+  finishedDate?: Date
 }
 
 export function Home() {
@@ -66,27 +67,52 @@ export function Home() {
   */
   const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
 
+  // Converter o número de minutos que eu tenho no ciclo em segundos
+  const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0
+
   useEffect(() => {
     let interval: number
 
     // Se eu tiver um ciclo ativo
     if (activeCycle) {
       interval = setInterval(() => {
-        // DifferenceInSeconds calcula a diferença de duas datas em segundos
-        setAmountSecondsPassed(
-          /*
-            newDate(), activeCycle.startDate -> data atual e
-            depois a dataque o ciclo começou
-          */
-          differenceInSeconds(new Date(), activeCycle.startDate),
+        /*
+          DifferenceInSeconds calcula a diferença de duas datas em segundos
+          newDate(), activeCycle.startDate -> data atual e
+          depois a dataque o ciclo começou
+        */
+        const secondsDifference = differenceInSeconds(
+          new Date(),
+          activeCycle.startDate,
         )
+
+        if (secondsDifference >= totalSeconds) {
+          setCycles((state) =>
+            state.map((cycle) => {
+              if (cycle.id === activeCycleId) {
+                return {
+                  ...cycle,
+                  finishedDate: new Date(),
+                }
+              } else return cycle
+            }),
+          )
+          setAmountSecondsPassed(totalSeconds)
+          clearInterval(interval)
+        } else {
+          /*
+            Só irá atualizar o tanto de segundos que passou se o total de
+            segundos ainda não for completo
+          */
+          setAmountSecondsPassed(secondsDifference)
+        }
       }, 1000)
     }
 
     return () => {
       clearInterval(interval)
     }
-  }, [activeCycle])
+  }, [activeCycle, totalSeconds, activeCycleId])
 
   function handleCreateNewCycle(data: NewCycleFormData) {
     const id = String(new Date().getTime())
@@ -113,9 +139,9 @@ export function Home() {
   }
 
   function handleInterruptCycle() {
-    setCycles(
+    setCycles((state) =>
       // Map -> percorre cada ciclo e retorna cada um dos ciclos alterados ou não
-      cycles.map((cycle) => {
+      state.map((cycle) => {
         if (cycle.id === activeCycleId) {
           return {
             ...cycle,
@@ -127,8 +153,6 @@ export function Home() {
     setActiveCycleId(null)
   }
 
-  // Converter o número de minutos que eu tenho no ciclo em segundos
-  const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0
   const currentSeconds = activeCycle ? totalSeconds - amountSecondsPassed : 0
 
   // Arredondando o número sempre pra baixo
@@ -148,8 +172,6 @@ export function Home() {
   const task = watch('task')
   // Desabilitando o submit enquanto a task não for digitada -> Mais legibilidade ao código
   const isSubmitDisabled = !task
-
-  console.log(cycles)
 
   return (
     <HomeContainer>
@@ -177,7 +199,7 @@ export function Home() {
             id="minutesAmount"
             placeholder="00"
             step={5}
-            min={5}
+            min={1}
             max={60}
             // valueAsNumber: true é para receber o valor como um number e não uma string
             {...register('minutesAmount', { valueAsNumber: true })}
