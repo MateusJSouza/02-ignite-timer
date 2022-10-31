@@ -65,9 +65,11 @@ export function Home() {
   const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
 
   useEffect(() => {
+    let interval: number
+
     // Se eu tiver um ciclo ativo
     if (activeCycle) {
-      setInterval(() => {
+      interval = setInterval(() => {
         // DifferenceInSeconds calcula a diferença de duas datas em segundos
         setAmountSecondsPassed(
           /*
@@ -77,6 +79,10 @@ export function Home() {
           differenceInSeconds(new Date(), activeCycle.startDate),
         )
       }, 1000)
+    }
+
+    return () => {
+      clearInterval(interval)
     }
   }, [activeCycle])
 
@@ -99,6 +105,7 @@ export function Home() {
     */
     setCycles((state) => [...state, newCycle])
     setActiveCycleId(id)
+    setAmountSecondsPassed(0)
 
     reset() // limpa os campos pro valor original, ou seja, os valores de defaultValues
   }
@@ -113,6 +120,12 @@ export function Home() {
 
   const minutes = String(minutesAmount).padStart(2, '0')
   const seconds = String(secondsAmount).padStart(2, '0')
+
+  useEffect(() => {
+    if (activeCycle) {
+      document.title = `${minutes}:${seconds}`
+    }
+  }, [minutes, seconds, activeCycle])
 
   // Observar os campos do formulário com o método watch
   const task = watch('task')
