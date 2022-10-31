@@ -33,7 +33,7 @@ export function Home() {
     Register é uma função que vai adicionar um input ao formulário.
     Essa função retorna vários métodos, como onChange, onBlur...
   */
-  const { register, handleSubmit, watch } = useForm<NewCycleFormData>({
+  const { register, handleSubmit, watch, reset } = useForm<NewCycleFormData>({
     resolver: zodResolver(newCycleFormValidationSchema),
     defaultValues: {
       task: '',
@@ -43,6 +43,7 @@ export function Home() {
 
   function handleCreateNewCycle(data: NewCycleFormData) {
     console.log(data)
+    reset() // limpa os campos pro valor original, ou seja, os valores de defaultValues
   }
 
   // Observar os campos do formulário com o método watch
@@ -75,9 +76,9 @@ export function Home() {
             type="number"
             id="minutesAmount"
             placeholder="00"
-            // step={5}
-            // min={5}
-            // max={60}
+            step={5}
+            min={5}
+            max={60}
             // valueAsNumber: true é para receber o valor como um number e não uma string
             {...register('minutesAmount', { valueAsNumber: true })}
           />
