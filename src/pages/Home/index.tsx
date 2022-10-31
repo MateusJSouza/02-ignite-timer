@@ -2,7 +2,8 @@ import { Play } from 'phosphor-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as zod from 'zod'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { differenceInSeconds } from 'date-fns'
 
 import {
   CountdownContainer,
@@ -34,6 +35,7 @@ interface Cycle {
   id: string
   task: string
   minutesAmount: number
+  startDate: Date
 }
 
 export function Home() {
@@ -56,6 +58,28 @@ export function Home() {
     },
   })
 
+  /* 
+    Percorrer o vetor de ciclos e encontrar um ciclo em que o ID do ciclo seja
+    igual ao ID do ciclo ativo
+  */
+  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
+
+  useEffect(() => {
+    // Se eu tiver um ciclo ativo
+    if (activeCycle) {
+      setInterval(() => {
+        // DifferenceInSeconds calcula a diferença de duas datas em segundos
+        setAmountSecondsPassed(
+          /*
+            newDate(), activeCycle.startDate -> data atual e
+            depois a dataque o ciclo começou
+          */
+          differenceInSeconds(new Date(), activeCycle.startDate),
+        )
+      }, 1000)
+    }
+  }, [activeCycle])
+
   function handleCreateNewCycle(data: NewCycleFormData) {
     const id = String(new Date().getTime())
 
@@ -63,6 +87,7 @@ export function Home() {
       id,
       task: data.task,
       minutesAmount: data.minutesAmount,
+      startDate: new Date(),
     }
 
     /*
@@ -77,12 +102,6 @@ export function Home() {
 
     reset() // limpa os campos pro valor original, ou seja, os valores de defaultValues
   }
-
-  /* 
-    Percorrer o vetor de ciclos e encontrar um ciclo em que o ID do ciclo seja
-    igual ao ID do ciclo ativo
-  */
-  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
 
   // Converter o número de minutos que eu tenho no ciclo em segundos
   const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0
