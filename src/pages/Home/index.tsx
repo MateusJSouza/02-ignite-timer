@@ -2,6 +2,7 @@ import { Play } from 'phosphor-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as zod from 'zod'
+import { useState } from 'react'
 
 import {
   CountdownContainer,
@@ -28,7 +29,18 @@ const newCycleFormValidationSchema = zod.object({
 */
 type NewCycleFormData = zod.infer<typeof newCycleFormValidationSchema>
 
+// Definição do formato dos ciclos
+interface Cycle {
+  id: string
+  task: string
+  minutesAmount: number
+}
+
 export function Home() {
+  const [cycles, setCycles] = useState<Cycle[]>([])
+  // o valor do id ativo do ciclo pode ser uma string ou nulo
+  const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
+
   /*
     Register é uma função que vai adicionar um input ao formulário.
     Essa função retorna vários métodos, como onChange, onBlur...
@@ -42,9 +54,34 @@ export function Home() {
   })
 
   function handleCreateNewCycle(data: NewCycleFormData) {
-    console.log(data)
+    const id = String(new Date().getTime())
+
+    const newCycle: Cycle = {
+      id,
+      task: data.task,
+      minutesAmount: data.minutesAmount,
+    }
+
+    /*
+      Adicionndo uma informação no array, copiando todos os ciclos que eu já
+      tenho e adicionar o novo ciclo no final.
+
+      Sempre que uma alteração de estado depender do valor anterior, devemos
+      usar o formato de arrow function
+    */
+    setCycles((state) => [...state, newCycle])
+    setActiveCycleId(id)
+
     reset() // limpa os campos pro valor original, ou seja, os valores de defaultValues
   }
+
+  /* 
+    Percorrer o vetor de ciclos e encontrar um ciclo em que o ID do ciclo seja
+    igual ao ID do ciclo ativo
+  */
+  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
+
+  console.log(activeCycle)
 
   // Observar os campos do formulário com o método watch
   const task = watch('task')
