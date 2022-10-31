@@ -41,6 +41,9 @@ export function Home() {
   // o valor do id ativo do ciclo pode ser uma string ou nulo
   const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
 
+  // O tanto de segundos que já se passaram desde quando o ciclo está ativo
+  const [amountSecondsPassed, setAmountSecondsPassed] = useState(0)
+
   /*
     Register é uma função que vai adicionar um input ao formulário.
     Essa função retorna vários métodos, como onChange, onBlur...
@@ -81,7 +84,16 @@ export function Home() {
   */
   const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
 
-  console.log(activeCycle)
+  // Converter o número de minutos que eu tenho no ciclo em segundos
+  const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0
+  const currentSeconds = activeCycle ? totalSeconds - amountSecondsPassed : 0
+
+  // Arredondando o número sempre pra baixo
+  const minutesAmount = Math.floor(currentSeconds / 60)
+  const secondsAmount = currentSeconds % 60 // % -> resto da divisão
+
+  const minutes = String(minutesAmount).padStart(2, '0')
+  const seconds = String(secondsAmount).padStart(2, '0')
 
   // Observar os campos do formulário com o método watch
   const task = watch('task')
@@ -124,11 +136,11 @@ export function Home() {
         </FormContainer>
 
         <CountdownContainer>
-          <span>0</span>
-          <span>0</span>
+          <span>{minutes[0]}</span>
+          <span>{minutes[1]}</span>
           <Separator>:</Separator>
-          <span>0</span>
-          <span>0</span>
+          <span>{seconds[0]}</span>
+          <span>{seconds[1]}</span>
         </CountdownContainer>
 
         <StartCountdownButton disabled={isSubmitDisabled} type="submit">
