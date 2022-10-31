@@ -21,16 +21,27 @@ const newCycleFormValidationSchema = zod.object({
     .max(60, 'O ciclo precisa ser de no máximo 60 minutos.'),
 })
 
+/*
+  type -> criar uma tipagem a partir de outra referência
+  infer -> inferindo algo definido automaticamente
+  Utilizo o typeof sempre que quero referenciar uma variável javascript dentro do typescript
+*/
+type NewCycleFormData = zod.infer<typeof newCycleFormValidationSchema>
+
 export function Home() {
   /*
     Register é uma função que vai adicionar um input ao formulário.
     Essa função retorna vários métodos, como onChange, onBlur...
   */
-  const { register, handleSubmit, watch } = useForm({
+  const { register, handleSubmit, watch } = useForm<NewCycleFormData>({
     resolver: zodResolver(newCycleFormValidationSchema),
+    defaultValues: {
+      task: '',
+      minutesAmount: 0,
+    },
   })
 
-  function handleCreateNewCycle(data: any) {
+  function handleCreateNewCycle(data: NewCycleFormData) {
     console.log(data)
   }
 
