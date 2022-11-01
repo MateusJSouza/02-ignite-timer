@@ -45,7 +45,13 @@ export function Home() {
     },
   })
 
-  const { handleSubmit, watch /* reset */ } = newCycleForm
+  const { handleSubmit, watch, reset } = newCycleForm
+
+  // Função que vai ser chamada diretamente de um evento
+  function handleCreateNewCycle(data: NewCycleFormData) {
+    createNewCycle(data)
+    reset() // reseta o formulário
+  }
 
   // Observar os campos do formulário com o método watch
   const task = watch('task')
@@ -59,7 +65,7 @@ export function Home() {
 
   return (
     <HomeContainer>
-      <form onSubmit={handleSubmit(createNewCycle)}>
+      <form onSubmit={handleSubmit(handleCreateNewCycle)}>
         {/* Herda as propripedades do newCycleForm para o FormProvider */}
         <FormProvider {...newCycleForm}>
           <NewCycleForm />
