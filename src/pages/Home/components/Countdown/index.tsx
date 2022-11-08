@@ -28,7 +28,11 @@ export function Countdown() {
         */
         const secondsDifference = differenceInSeconds(
           new Date(),
-          activeCycle.startDate,
+          /*
+            se esse startDate for uma string, ele vai converter numa data
+            se ele já for uma data, não irá acontecer nada  
+          */
+          new Date(activeCycle.startDate),
         )
 
         if (secondsDifference >= totalSeconds) {

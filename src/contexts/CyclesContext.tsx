@@ -1,4 +1,11 @@
-import { createContext, ReactNode, useState, useReducer } from 'react'
+import { differenceInSeconds } from 'date-fns'
+import {
+  createContext,
+  ReactNode,
+  useState,
+  useReducer,
+  useEffect,
+} from 'react'
 import {
   addNewCycleAction,
   interruptCurrentCycleAction,
@@ -34,13 +41,22 @@ interface CyclesContextProviderProps {
 export function CyclesContextProvider({
   children,
 }: CyclesContextProviderProps) {
-  const [cyclesState, dispatch] = useReducer(cyclesReducer, {
-    cycles: [],
-    activeCycleId: null,
-  })
+  const [cyclesState, dispatch] = useReducer(
+    cyclesReducer,
+    {
+      cycles: [],
+      activeCycleId: null,
+    },
+    () => {
+      const storedStateAsJSON = localStorage.getItem(
+        '@ignite-timer:cycles-state-1.0.0',
+      )
 
-  // O tanto de segundos que já se passaram desde quando o ciclo está ativo
-  const [amountSecondsPassed, setAmountSecondsPassed] = useState(0)
+      if (storedStateAsJSON) {
+        return JSON.parse(storedStateAsJSON)
+      }
+    },
+  )
 
   const { cycles, activeCycleId } = cyclesState
 
@@ -49,6 +65,15 @@ export function CyclesContextProvider({
     igual ao ID do ciclo ativo
   */
   const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
+
+  // O tanto de segundos que já se passaram desde quando o ciclo está ativo
+  const [amountSecondsPassed, setAmountSecondsPassed] = useState(() => {
+    if (activeCycle) {
+      return differenceInSeconds(new Date(), new Date(activeCycle.startDate))
+    }
+
+    return 0
+  })
 
   function setSecondsPassed(seconds: number) {
     setAmountSecondsPassed(seconds)
@@ -76,6 +101,13 @@ export function CyclesContextProvider({
   function interruptCurrentCycle() {
     dispatch(interruptCurrentCycleAction())
   }
+
+  useEffect(() => {
+    const stateJSON = JSON.stringify(cyclesState)
+
+    // @nomeDaAplicação:nomeDaInformação-1.0.0
+    localStorage.setItem('@ignite-timer:cycles-state-1.0.0', stateJSON)
+  }, [cyclesState])
 
   return (
     <CyclesContext.Provider
