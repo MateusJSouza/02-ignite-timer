@@ -1,4 +1,5 @@
 import { ActionTypes } from './actions'
+import { produce } from 'immer'
 
 // Definição do formato dos ciclos
 export interface Cycle {
@@ -21,40 +22,44 @@ export function cyclesReducer(state: CyclesState, action: any) {
 
   switch (action.type) {
     case ActionTypes.ADD_NEW_CYCLE:
-      return {
-        ...state,
-        cycles: [...state.cycles, action.payload.newCycle],
-        activeCycleId: action.payload.newCycle.id,
+      return produce(state, (draft) => {
+        draft.cycles.push(action.payload.newCycle)
+        draft.activeCycleId = action.payload.newCycle.id
+      })
+    case ActionTypes.INTERRUPT_CURRENT_CYCLE: {
+      /* 
+        Buscando o índice no array de ciclos do ciclo que está ativo atualmente
+        Procurando o ciclo que o id for igual ao activeCycleId
+      */
+      const currentCycleIndex = state.cycles.findIndex((cycle) => {
+        return cycle.id === state.activeCycleId
+      })
+
+      // Se ele for menor que zero, o estado não é alterado
+      if (currentCycleIndex < 0) {
+        return state
       }
-    case ActionTypes.INTERRUPT_CURRENT_CYCLE:
-      return {
-        ...state,
-        cycles:
-          // Map -> percorre cada ciclo e retorna cada um dos ciclos alterados ou não
-          state.cycles.map((cycle) => {
-            if (cycle.id === state.activeCycleId) {
-              return { ...cycle, interruptedDate: new Date() }
-            } else {
-              return cycle
-            }
-          }),
-        activeCycleId: null,
+
+      return produce(state, (draft) => {
+        // O activeCycleId é setado como nulo
+        draft.activeCycleId = null
+        draft.cycles[currentCycleIndex].interruptedDate = new Date()
+      })
+    }
+    case ActionTypes.MARK_CURRENT_CYCLE_AS_FINISHED: {
+      const currentCycleIndex = state.cycles.findIndex((cycle) => {
+        return cycle.id === state.activeCycleId
+      })
+
+      if (currentCycleIndex < 0) {
+        return state
       }
-    case ActionTypes.MARK_CURRENT_CYCLE_AS_FINISHED:
-      return {
-        ...state,
-        cycles:
-          // Map -> percorre cada ciclo e retorna cada um dos ciclos alterados ou não
-          state.cycles.map((cycle) => {
-            if (cycle.id === state.activeCycleId) {
-              return {
-                ...cycle,
-                finishedDate: new Date(),
-              }
-            } else return cycle
-          }),
-        activeCycleId: null,
-      }
+
+      return produce(state, (draft) => {
+        draft.activeCycleId = null
+        draft.cycles[currentCycleIndex].finishedDate = new Date()
+      })
+    }
     default:
       return state
   }
